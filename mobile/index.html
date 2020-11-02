@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Crear Nuevo Legajo :: Web Capture</title>
+
+  <link href="css/webcapture.css" rel="stylesheet">
+  <link href="libs/css/web-capture.css?a0a53880b5abfb50c1bc" rel="stylesheet"></head>
+  <script src="https://unpkg.com/react@16/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/redux@4.0.5/dist/redux.js"></script>
+  <script src="https://unpkg.com/react-dom@16/umd/react-dom.production.min.js"></script>
+</head>
+
+<body>
+	<div class="demo_app-container" style="height: 100%;">
+		<!--img src="images/logo.png" width="226" height="24" style="margin-bottom: 16px;margin-top: 32px;" /-->
+		<div id="content-container-content" class="content-container">
+			<div class="captureScreenTitle">
+				Agregar documentos al legajo
+			</div>
+			<div id="content" style="overflow-y: auto;width: 100%;flex-grow: 1;"></div>
+			<div id="error-text"></div>
+			<div style="align-items: center;display: flex;margin: 5px 0;position: relative">
+				<table style="width: 100%;">
+					<tr>
+						<td><button id="button-captura" disabled onClick="Start()">Capturar</button></td>
+						<td><button id="button-continuar" disabled onClick="Continuar()">Continuar</button></td>
+					</tr>
+				</table>  
+				<input type="file" id="image_uploads" name="image_uploads" accept="image/x-png,image/gif,image/jpeg" multiple />
+			</div>
+		</div>
+	</div>
+
+	<script>
+    // results from webCapture module
+    let resultCache = [];
+    let stopImageEvents = false;
+    let localizedStrings = {};
+
+    // In order to call window.flutter_inappwebview.callHandler(handlerName <String>, ...args) 
+    // properly, you need to wait and listen the JavaScript event flutterInAppWebViewPlatformReady. 
+    // This event will be dispatched as soon as the platform (Android or iOS) is ready to handle the callHandler method. 
+    window.addEventListener("flutterInAppWebViewPlatformReady", function(event) {
+    });    
+
+    // draw image previews and correct button text
+    const updateView = () => {
+      document.getElementById('button-captura').innerHTML = resultCache.length > 0 ? 'Capturar' : 'Capturar';
+      if (resultCache.length === 0) {
+        document.getElementById('button-continuar').disabled = true;
+        const maxHeight = document.getElementById('content').offsetHeight;
+
+        // placeholder image if no image captured
+        document.getElementById('content').innerHTML =
+          '<div style="height: 100%;display: flex;align-items: center"><img src="images/pages.svg" width="auto" height="auto"  style="display:block;margin:0 auto;max-height:' +
+          maxHeight +
+          'px"/></div>';
+      } else {
+        document.getElementById('button-continuar').disabled = false;
+        // draw preview captured images with click handler = open WebCapture app
+        document.getElementById('content').innerHTML = resultCache
+          .map((img, i) => {
+            return '<img class="capturedImage" src="' + img.capturedImage + '" onClick="Start(' + i + ')"/>';
+          })
+          .join('');
+      }
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // load localized strings from external file
+      fetch('./libs/js/localizedStrings.json').then((res) => res.json())
+        .then((res) => (localizedStrings = res));
+
+
+
+      debugger;
+      // create initial view
+      updateView();
+      // enable button after web-capture.js script loaded
+      document.getElementById('button-captura').disabled = false;
+
+      // optional init phase, preload wasm scripts
+      // indicate loading on button
+      document.getElementById('button-captura').innerHTML = '<span class="loading"/>';
+      // start loading wasm
+      window.ABBYY.WebCapture.init()
+        .then(updateView) // after loading restore button to original view
+        .catch((e) => {
+          // if error during loading & initializing wasm scripts
+          console.error('Error during initialization: ' + e.toString());
+          // if user device/browser not supported, restore functionality to attach
+
+          document.getElementById('error-text').innerHTML =
+            'Initialization failed(' +
+            e +
+            '). <br/> The module cannot be started. <br/>Fallback from\n' +
+            '      webcapture to native html functionality will be used.';
+
+          revertToClassicBrowseButton();
+        });
+    });
+
+    // sample
+    const Start = (startPage) => {
+      if (stopImageEvents) {
+        return;
+      }
+
+      const options = {
+        startPage: startPage || 0,
+        images: resultCache,
+        localizedStrings
+      };
+
+      console.log(localizedStrings);
+      window.ABBYY.WebCapture.capture(options)
+        .then((imgs) => {
+          // store results in cache
+          resultCache = imgs;
+          // redraw preview
+          updateView();
+        })
+        .catch((e) => {
+          console.error('Error during capture: ' + e.toString());
+        });
+    };
+
+    const revertToClassicBrowseButton = () => {
+      const button = document.getElementById('button-captura');
+
+      button.disabled = false;
+      button.innerHTML = 'Attach files';
+      button.removeAttribute('onClick');
+      // show input type file with opacity 0
+      document.getElementById('image_uploads').style.display = 'block';
+
+      stopImageEvents = true;
+
+      document.getElementById('image_uploads').addEventListener('change', (ev) => {
+        Promise.all(
+          Array.prototype.map.call(ev.target.files, (file) => {
+            return new Promise((resolve) => {
+              const reader = new FileReader();
+
+              reader.onload = () => {
+                resolve(reader.result);
+              };
+
+              reader.readAsDataURL(file);
+            });
+          })
+        ).then((result) => {
+          resultCache = result.map((img) => ({
+            capturedImage: img,
+          }));
+          updateView();
+        });
+      });
+    };
+
+    const Continuar = () => {
+      window.flutter_inappwebview.callHandler('continuar', resultCache, 2, 3).then(function(result) {
+        // get result from Flutter side. It will be the number 64.
+        console.log(result);
+      });
+    }
+    </script>
+  <script type="text/javascript" src="libs/js/web-capture.js?a0a53880b5abfb50c1bc"></script></body>
+</html>
