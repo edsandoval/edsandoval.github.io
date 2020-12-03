@@ -18,15 +18,23 @@
 		<!--img src="images/logo.png" width="226" height="24" style="margin-bottom: 16px;margin-top: 32px;" /-->
 		<div id="content-container-content" class="content-container">
 			<div class="captureScreenTitle">
-				Agregar documentos al legajo
+				AGREGAR DOCUMENTOS
 			</div>
 			<div id="content" style="overflow-y: auto;width: 100%;flex-grow: 1;"></div>
 			<div id="error-text"></div>
 			<div style="align-items: center;display: flex;margin: 5px 0;position: relative">
 				<table style="width: 100%;">
 					<tr>
-						<td><button id="button-captura" disabled onClick="Start()">Capturar</button></td>
-						<td><button id="button-continuar" disabled onClick="Continuar()">Continuar</button></td>
+						<td>
+							<button id="button-captura" disabled onClick="Start()">
+								<img src="images/camera.png" width="32" height="32" style="align-items: center; ">
+							</button>
+						</td>
+						<td>
+							<button id="button-continuar" disabled onClick="Continuar()">
+								<img src="images/success.png" width="32" height="32" style="align-items: center; ">
+							</button>
+						</td>
 					</tr>
 				</table>  
 				<input type="file" id="image_uploads" name="image_uploads" accept="image/x-png,image/gif,image/jpeg" multiple />
@@ -48,7 +56,8 @@
 
     // draw image previews and correct button text
     const updateView = () => {
-      document.getElementById('button-captura').innerHTML = resultCache.length > 0 ? 'Capturar' : 'Capturar';
+	  //var image-captura = '<img src="images/camera.png" width="32" height="32" style="align-items: center; ">';
+      document.getElementById('button-captura').innerHTML = '<img src="images/camera.png" width="32" height="32" style="align-items: center; ">';
       if (resultCache.length === 0) {
         document.getElementById('button-continuar').disabled = true;
         const maxHeight = document.getElementById('content').offsetHeight;
@@ -74,9 +83,6 @@
       fetch('./libs/js/localizedStrings.json').then((res) => res.json())
         .then((res) => (localizedStrings = res));
 
-
-
-      debugger;
       // create initial view
       updateView();
       // enable button after web-capture.js script loaded
@@ -85,8 +91,14 @@
       // optional init phase, preload wasm scripts
       // indicate loading on button
       document.getElementById('button-captura').innerHTML = '<span class="loading"/>';
+	  
+	  const options = {
+	    licenseFilePath: './MWC.ABBYY.License', // relative to wasm files (default folder /libs/js) or absolute path
+	    wasmFilesPath: './libs/js', // relative to index.html or absolute path
+	  };	  
+	  
       // start loading wasm
-      window.ABBYY.WebCapture.init()
+      window.ABBYY.WebCapture.init(options)
         .then(updateView) // after loading restore button to original view
         .catch((e) => {
           // if error during loading & initializing wasm scripts
@@ -110,8 +122,11 @@
       }
 
       const options = {
+		licenseFilePath: './MWC.ABBYY.License',
+		wasmFilesPath: './libs/js',
         startPage: startPage || 0,
         images: resultCache,
+		enableCamera: true,
         localizedStrings
       };
 

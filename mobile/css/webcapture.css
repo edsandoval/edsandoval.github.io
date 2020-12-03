@@ -59,7 +59,7 @@
         width: 160px;
         height: 52px;
         border-radius: 8px;
-        background-color: #4a8ee0;
+        background-color: #bfbfbf;
         color: white;
         border: 0;
         font-size: 18px;
@@ -106,10 +106,13 @@
 
       .captureScreenTitle {
         font-size: 32px; 
-        color: gray; 
+        color: #46b6ab; 
         line-height: 1.19; 
-        width: 320px; 
-        text-align: center; 
+        width: 350px; 
         margin-bottom: 16px;
         margin-top: 45px !important;
+		text-align: justify;
       }
+	  
+
+	
