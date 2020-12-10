@@ -184,24 +184,16 @@
     const Continuar = () => {
 		debugger;
 		UploadFiles();
-		window.close();
       /*window.flutter_inappwebview.callHandler('continuar', resultCache, 2, 3).then(function(result) {
         // get result from Flutter side. It will be the number 64.
         console.log(result);
       });*/
     }
 	
-	const MostraToken = () => {
-		//var query = window.location.search.substring(1);
-		const urlParams = new URLSearchParams(window.location.search);
-
-		alert(urlParams.get('token'));
-	}
-	
 	const UploadFiles = () => {
 		const urlParams = new URLSearchParams(window.location.search);
 		let completeUrl = NETCONTENT_WEB_API_SERVER + UPLOAD_SERVICE;
-		
+		let fileCount = 0;
 		console.log("URL> " + completeUrl);
 		console.log("TOKEN> " + urlParams.get('token'));
 		console.log("NRO FILES> " + resultCache.length);
@@ -228,7 +220,12 @@
 								'Access-Control-Allow-Origin': '*'
 							}
 						}).then(data => {
-							console.table(data);
+							fileCount++;
+							if(fileCount == resultCache.length) {
+								console.log("Se cierra la ventana!!!");
+								window.close();
+							}
+							console.table(data);				
 						});
 					});
 			}
