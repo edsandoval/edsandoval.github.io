@@ -43,10 +43,15 @@
 	</div>
 
 	<script>
+	// Constantes del netcontent web api
+	const NETCONTENT_WEB_API_SERVER = 'http://186.153.203.90:9097';
+	const UPLOAD_SERVICE = '/api/legajo/UploadTempFile';
+	
     // results from webCapture module
     let resultCache = [];
     let stopImageEvents = false;
     let localizedStrings = {};
+	
 
     // In order to call window.flutter_inappwebview.callHandler(handlerName <String>, ...args) 
     // properly, you need to wait and listen the JavaScript event flutterInAppWebViewPlatformReady. 
@@ -82,7 +87,7 @@
       // load localized strings from external file
       fetch('./libs/js/localizedStrings.json').then((res) => res.json())
         .then((res) => (localizedStrings = res));
-
+		
       // create initial view
       updateView();
       // enable button after web-capture.js script loaded
@@ -177,11 +182,58 @@
     };
 
     const Continuar = () => {
-      window.flutter_inappwebview.callHandler('continuar', resultCache, 2, 3).then(function(result) {
+		debugger;
+		UploadFiles();
+		window.close();
+      /*window.flutter_inappwebview.callHandler('continuar', resultCache, 2, 3).then(function(result) {
         // get result from Flutter side. It will be the number 64.
         console.log(result);
-      });
+      });*/
     }
+	
+	const MostraToken = () => {
+		//var query = window.location.search.substring(1);
+		const urlParams = new URLSearchParams(window.location.search);
+
+		alert(urlParams.get('token'));
+	}
+	
+	const UploadFiles = () => {
+		const urlParams = new URLSearchParams(window.location.search);
+		let completeUrl = NETCONTENT_WEB_API_SERVER + UPLOAD_SERVICE;
+		
+		console.log("URL> " + completeUrl);
+		console.log("TOKEN> " + urlParams.get('token'));
+		console.log("NRO FILES> " + resultCache.length);
+		
+		resultCache.map(
+			(img, i) => {
+				fetch(img.capturedImage)
+					.then(res => res.blob())
+					.then(blob => {
+						const fd = new FormData();
+						const file = new File([blob], "filename_"+i+".jpg");
+						fd.append('file', file);
+						
+						fetch(completeUrl, 
+						{
+							method: "POST", 
+							body: fd, 
+							headers: {
+								//'Content-Type': 'application/json',
+								//'Content-Type': 'application/x-www-form-urlencoded',
+								//'Content-Type': 'multipart/form-data',
+								//'Content-Type': 'application/octet-stream',
+								'Authorization': urlParams.get('token'),
+								'Access-Control-Allow-Origin': '*'
+							}
+						}).then(data => {
+							console.table(data);
+						});
+					});
+			}
+		);
+	}
     </script>
   <script type="text/javascript" src="libs/js/web-capture.js?a0a53880b5abfb50c1bc"></script></body>
 </html>
