@@ -184,12 +184,8 @@
     };
 
     const Continuar = () => {
-		debugger;
+		document.getElementById('button-continuar').innerHTML = '<span class="loading"/>';
 		UploadFiles();
-      /*window.flutter_inappwebview.callHandler('continuar', resultCache, 2, 3).then(function(result) {
-        // get result from Flutter side. It will be the number 64.
-        console.log(result);
-      });*/
     }
 	
 	const UploadFiles = () => {
