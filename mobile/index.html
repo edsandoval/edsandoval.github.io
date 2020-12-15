@@ -44,9 +44,6 @@
 
 	<script>
 	// Constantes del netcontent web api
-	//const NETCONTENT_WEB_API_SERVER = 'http://186.153.203.90:9097';
-	const NETCONTENT_WEB_API_SERVER = 'https://ed0e739a4ad8.ngrok.io';
-	
 	const UPLOAD_SERVICE = '/api/legajo/UploadTempFile';
 	
     // results from webCapture module
@@ -190,10 +187,14 @@
 	
 	const UploadFiles = () => {
 		const urlParams = new URLSearchParams(window.location.search);
-		let completeUrl = NETCONTENT_WEB_API_SERVER + UPLOAD_SERVICE;
+		let dataDecoded = atob(urlParams.get('data'));
+		let dataArray = dataDecoded.split("|");
+		
+		let completeUrl = dataArray[1] + UPLOAD_SERVICE;
 		let fileCount = 0;
 		console.log("URL> " + completeUrl);
-		console.log("TOKEN> " + urlParams.get('token'));
+		console.log("DATA> " + urlParams.get('data'));
+		console.log("TOKEN> " + dataArray[0]);
 		console.log("NRO FILES> " + resultCache.length);
 		
 		resultCache.map(
@@ -214,7 +215,7 @@
 								//'Content-Type': 'application/x-www-form-urlencoded',
 								//'Content-Type': 'multipart/form-data',
 								//'Content-Type': 'application/octet-stream',
-								'Authorization': urlParams.get('token'),
+								'Authorization': dataArray[0],
 								'Access-Control-Allow-Origin': '*'
 							}
 						}).then(data => {
